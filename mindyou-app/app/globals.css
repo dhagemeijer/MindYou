@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-cream text-ink dark:bg-ink dark:text-cream transition-colors duration-300;
+  }
+  ::selection {
+    @apply bg-gold/30;
+  }
+  :focus-visible {
+    outline: 2px solid #C9A66B;
+    outline-offset: 2px;
+  }
+}
