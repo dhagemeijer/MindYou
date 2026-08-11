@@ -1,21 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ItemStatus } from "@prisma/client";
+import { ItemStatus, ItemType } from "@prisma/client";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const body = await req.json();
-  const { status } = body as { status?: ItemStatus };
+  const { status, title, type, tags, projectId } = body as {
+    status?: ItemStatus;
+    title?: string;
+    type?: ItemType;
+    tags?: string[];
+    projectId?: string | null;
+  };
 
-  if (!status || !Object.values(ItemStatus).includes(status)) {
+  if (status !== undefined && !Object.values(ItemStatus).includes(status)) {
     return NextResponse.json({ error: "Ongeldige status" }, { status: 400 });
+  }
+  if (type !== undefined && !Object.values(ItemType).includes(type)) {
+    return NextResponse.json({ error: "Ongeldig type" }, { status: 400 });
+  }
+  if (title !== undefined && !title.trim()) {
+    return NextResponse.json({ error: "Titel mag niet leeg zijn" }, { status: 400 });
   }
 
   const item = await prisma.item.update({
     where: { id: params.id },
-    data: { status },
+    data: {
+      ...(status !== undefined ? { status } : {}),
+      ...(title !== undefined ? { title: title.trim() } : {}),
+      ...(type !== undefined ? { type } : {}),
+      ...(projectId !== undefined ? { projectId: projectId || null } : {}),
+      ...(tags !== undefined
+        ? {
+            tags: {
+              set: [],
+              connectOrCreate: tags
+                .map((t) => t.trim())
+                .filter(Boolean)
+                .map((name) => ({ where: { name }, create: { name } })),
+            },
+          }
+        : {}),
+    },
     include: { project: true, tags: true },
   });
 

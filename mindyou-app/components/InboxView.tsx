@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, X, Check, Trash2, Lightbulb, ListTodo, Zap } from "lucide-react";
+import { Plus, X, Check, Trash2, Pencil, Lightbulb, ListTodo, Zap } from "lucide-react";
 
 type ItemType = "IDEE" | "TODO" | "ACTIE";
 type ItemStatus = "INBOX" | "ACTIEF" | "AFGEROND";
@@ -32,6 +32,179 @@ const TYPE_META: Record<ItemType, { label: string; icon: typeof Lightbulb }> = {
   ACTIE: { label: "Actie", icon: Zap },
 };
 
+function TypePicker({ type, setType }: { type: ItemType; setType: (t: ItemType) => void }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {(Object.keys(TYPE_META) as ItemType[]).map((t) => {
+        const { label, icon: Icon } = TYPE_META[t];
+        const active = type === t;
+        return (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setType(t)}
+            className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-sans text-xs transition-colors ${
+              active
+                ? "border-gold bg-gold text-ink"
+                : "border-ink/15 text-ink/60 hover:border-gold/60 dark:border-cream/20 dark:text-cream/60"
+            }`}
+          >
+            <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ProjectPicker({
+  projectId,
+  setProjectId,
+  projects,
+  onCreateProject,
+}: {
+  projectId: string;
+  setProjectId: (id: string) => void;
+  projects: Project[];
+  onCreateProject: (name: string) => Promise<Project>;
+}) {
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState("");
+
+  if (creating) {
+    return (
+      <div className="flex flex-1 items-center gap-1.5">
+        <input
+          autoFocus
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          onKeyDown={async (e) => {
+            if (e.key === "Enter" && newName.trim()) {
+              e.preventDefault();
+              const p = await onCreateProject(newName.trim());
+              setProjectId(p.id);
+              setNewName("");
+              setCreating(false);
+            }
+          }}
+          placeholder="Nieuw project..."
+          className="flex-1 rounded-lg border border-gold bg-cream px-3 py-2 font-sans text-xs text-ink placeholder:text-ink/35 focus:outline-none dark:bg-ink dark:text-cream"
+        />
+        <button
+          type="button"
+          onClick={async () => {
+            if (!newName.trim()) return;
+            const p = await onCreateProject(newName.trim());
+            setProjectId(p.id);
+            setNewName("");
+            setCreating(false);
+          }}
+          className="rounded-lg bg-gold p-2 text-ink"
+          aria-label="Project toevoegen"
+        >
+          <Check className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setCreating(false)}
+          className="rounded-lg border border-ink/15 p-2 text-ink/50 dark:border-cream/20 dark:text-cream/50"
+          aria-label="Annuleren"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <select
+      value={projectId}
+      onChange={(e) => {
+        if (e.target.value === "__new__") setCreating(true);
+        else setProjectId(e.target.value);
+      }}
+      className="flex-1 rounded-lg border border-ink/10 bg-cream px-3 py-2 font-sans text-xs text-ink focus:border-gold focus:outline-none dark:border-cream/15 dark:bg-ink dark:text-cream"
+    >
+      <option value="">Geen project</option>
+      {projects.map((p) => (
+        <option key={p.id} value={p.id}>
+          {p.name}
+        </option>
+      ))}
+      <option value="__new__">+ Nieuw project...</option>
+    </select>
+  );
+}
+
+function EditItemRow({
+  item,
+  projects,
+  onCreateProject,
+  onSave,
+  onCancel,
+}: {
+  item: Item;
+  projects: Project[];
+  onCreateProject: (name: string) => Promise<Project>;
+  onSave: (patch: { title: string; type: ItemType; tags: string[]; projectId: string | null }) => void;
+  onCancel: () => void;
+}) {
+  const [title, setTitle] = useState(item.title);
+  const [type, setType] = useState<ItemType>(item.type);
+  const [tagsInput, setTagsInput] = useState(item.tags.map((t) => t.name).join(", "));
+  const [projectId, setProjectId] = useState(item.project?.id ?? "");
+
+  return (
+    <li className="flex flex-col gap-3 rounded-xl border border-gold/50 bg-gold/[0.05] px-4 py-4">
+      <input
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="w-full rounded-lg border border-ink/10 bg-cream px-3 py-2 font-sans text-sm text-ink focus:border-gold focus:outline-none dark:border-cream/15 dark:bg-ink dark:text-cream"
+      />
+      <TypePicker type={type} setType={setType} />
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <input
+          value={tagsInput}
+          onChange={(e) => setTagsInput(e.target.value)}
+          placeholder="tags, met, komma's"
+          className="flex-1 rounded-lg border border-ink/10 bg-cream px-3 py-2 font-sans text-xs text-ink placeholder:text-ink/35 focus:border-gold focus:outline-none dark:border-cream/15 dark:bg-ink dark:text-cream dark:placeholder:text-cream/35"
+        />
+        <ProjectPicker
+          projectId={projectId}
+          setProjectId={setProjectId}
+          projects={projects}
+          onCreateProject={onCreateProject}
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() =>
+            onSave({
+              title,
+              type,
+              tags: tagsInput.split(",").map((t) => t.trim()).filter(Boolean),
+              projectId: projectId || null,
+            })
+          }
+          disabled={!title.trim()}
+          className="flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 font-sans text-xs font-medium text-cream disabled:opacity-40 dark:bg-gold dark:text-ink"
+        >
+          <Check className="h-3.5 w-3.5" />
+          Opslaan
+        </button>
+        <button
+          onClick={onCancel}
+          className="flex items-center gap-1.5 rounded-full border border-ink/15 px-4 py-1.5 font-sans text-xs text-ink/60 dark:border-cream/20 dark:text-cream/60"
+        >
+          <X className="h-3.5 w-3.5" />
+          Annuleren
+        </button>
+      </div>
+    </li>
+  );
+}
+
 export function InboxView() {
   const [items, setItems] = useState<Item[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -41,9 +214,8 @@ export function InboxView() {
   const [type, setType] = useState<ItemType>("IDEE");
   const [tagsInput, setTagsInput] = useState("");
   const [projectId, setProjectId] = useState<string>("");
-  const [creatingProject, setCreatingProject] = useState(false);
-  const [newProjectName, setNewProjectName] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -57,18 +229,15 @@ export function InboxView() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function handleCreateProject() {
-    if (!newProjectName.trim()) return;
+  async function createProject(name: string): Promise<Project> {
     const res = await fetch("/api/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newProjectName.trim() }),
+      body: JSON.stringify({ name }),
     });
     const project = await res.json();
     setProjects((prev) => [...prev, project]);
-    setProjectId(project.id);
-    setNewProjectName("");
-    setCreatingProject(false);
+    return project;
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -113,6 +282,20 @@ export function InboxView() {
     setItems((prev) => prev.map((i) => (i.id === item.id ? updated : i)));
   }
 
+  async function saveEdit(
+    id: string,
+    patch: { title: string; type: ItemType; tags: string[]; projectId: string | null }
+  ) {
+    const res = await fetch(`/api/items/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    const updated = await res.json();
+    setItems((prev) => prev.map((i) => (i.id === id ? updated : i)));
+    setEditingId(null);
+  }
+
   async function deleteItem(id: string) {
     setItems((prev) => prev.filter((i) => i.id !== id));
     await fetch(`/api/items/${id}`, { method: "DELETE" });
@@ -139,27 +322,7 @@ export function InboxView() {
           className="w-full rounded-lg border border-ink/10 bg-cream px-3 py-2.5 font-sans text-sm text-ink placeholder:text-ink/35 focus:border-gold focus:outline-none dark:border-cream/15 dark:bg-ink dark:text-cream dark:placeholder:text-cream/35"
         />
 
-        <div className="flex flex-wrap items-center gap-2">
-          {(Object.keys(TYPE_META) as ItemType[]).map((t) => {
-            const { label, icon: Icon } = TYPE_META[t];
-            const active = type === t;
-            return (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setType(t)}
-                className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-sans text-xs transition-colors ${
-                  active
-                    ? "border-gold bg-gold text-ink"
-                    : "border-ink/15 text-ink/60 hover:border-gold/60 dark:border-cream/20 dark:text-cream/60"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" strokeWidth={2} />
-                {label}
-              </button>
-            );
-          })}
-        </div>
+        <TypePicker type={type} setType={setType} />
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <input
@@ -168,60 +331,12 @@ export function InboxView() {
             placeholder="tags, met, komma's"
             className="flex-1 rounded-lg border border-ink/10 bg-cream px-3 py-2 font-sans text-xs text-ink placeholder:text-ink/35 focus:border-gold focus:outline-none dark:border-cream/15 dark:bg-ink dark:text-cream dark:placeholder:text-cream/35"
           />
-
-          {creatingProject ? (
-            <div className="flex flex-1 items-center gap-1.5">
-              <input
-                autoFocus
-                value={newProjectName}
-                onChange={(e) => setNewProjectName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleCreateProject();
-                  }
-                }}
-                placeholder="Nieuw project..."
-                className="flex-1 rounded-lg border border-gold bg-cream px-3 py-2 font-sans text-xs text-ink placeholder:text-ink/35 focus:outline-none dark:bg-ink dark:text-cream"
-              />
-              <button
-                type="button"
-                onClick={handleCreateProject}
-                className="rounded-lg bg-gold p-2 text-ink"
-                aria-label="Project toevoegen"
-              >
-                <Check className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setCreatingProject(false)}
-                className="rounded-lg border border-ink/15 p-2 text-ink/50 dark:border-cream/20 dark:text-cream/50"
-                aria-label="Annuleren"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ) : (
-            <select
-              value={projectId}
-              onChange={(e) => {
-                if (e.target.value === "__new__") {
-                  setCreatingProject(true);
-                } else {
-                  setProjectId(e.target.value);
-                }
-              }}
-              className="flex-1 rounded-lg border border-ink/10 bg-cream px-3 py-2 font-sans text-xs text-ink focus:border-gold focus:outline-none dark:border-cream/15 dark:bg-ink dark:text-cream"
-            >
-              <option value="">Geen project</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-              <option value="__new__">+ Nieuw project...</option>
-            </select>
-          )}
+          <ProjectPicker
+            projectId={projectId}
+            setProjectId={setProjectId}
+            projects={projects}
+            onCreateProject={createProject}
+          />
         </div>
 
         <button
@@ -243,10 +358,17 @@ export function InboxView() {
         </p>
       ) : (
         <ul className="flex flex-col gap-2">
-          {items.map((item) => {
-            const { icon: Icon } = TYPE_META[item.type];
-            const done = item.status === "AFGEROND";
-            return (
+          {items.map((item) =>
+            editingId === item.id ? (
+              <EditItemRow
+                key={item.id}
+                item={item}
+                projects={projects}
+                onCreateProject={createProject}
+                onSave={(patch) => saveEdit(item.id, patch)}
+                onCancel={() => setEditingId(null)}
+              />
+            ) : (
               <li
                 key={item.id}
                 className="flex items-center gap-3 rounded-xl border border-ink/8 px-4 py-3 dark:border-cream/10"
@@ -255,7 +377,7 @@ export function InboxView() {
                   onClick={() => toggleStatus(item)}
                   aria-label="Status wijzigen"
                   className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${
-                    done
+                    item.status === "AFGEROND"
                       ? "border-gold bg-gold text-ink"
                       : item.status === "ACTIEF"
                         ? "border-gold text-gold"
@@ -265,12 +387,17 @@ export function InboxView() {
                   <Check className="h-3.5 w-3.5" strokeWidth={3} />
                 </button>
 
-                <Icon className="h-4 w-4 shrink-0 text-ink/40 dark:text-cream/40" strokeWidth={2} />
+                {(() => {
+                  const { icon: Icon } = TYPE_META[item.type];
+                  return (
+                    <Icon className="h-4 w-4 shrink-0 text-ink/40 dark:text-cream/40" strokeWidth={2} />
+                  );
+                })()}
 
                 <div className="min-w-0 flex-1">
                   <p
                     className={`truncate font-sans text-sm text-ink dark:text-cream ${
-                      done ? "text-ink/40 line-through dark:text-cream/40" : ""
+                      item.status === "AFGEROND" ? "text-ink/40 line-through dark:text-cream/40" : ""
                     }`}
                   >
                     {item.title}
@@ -295,6 +422,13 @@ export function InboxView() {
                 </div>
 
                 <button
+                  onClick={() => setEditingId(item.id)}
+                  aria-label="Bewerken"
+                  className="shrink-0 rounded-full p-1.5 text-ink/30 transition-colors hover:bg-ink/5 hover:text-ink/60 dark:text-cream/30 dark:hover:bg-cream/10 dark:hover:text-cream/60"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+                <button
                   onClick={() => deleteItem(item.id)}
                   aria-label="Verwijderen"
                   className="shrink-0 rounded-full p-1.5 text-ink/30 transition-colors hover:bg-ink/5 hover:text-ink/60 dark:text-cream/30 dark:hover:bg-cream/10 dark:hover:text-cream/60"
@@ -302,8 +436,8 @@ export function InboxView() {
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </li>
-            );
-          })}
+            )
+          )}
         </ul>
       )}
     </div>

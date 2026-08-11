@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Check, Plus, Trash2, RotateCcw, GripVertical, PartyPopper, Pencil, X } from "lucide-react";
+import { Check, Plus, Trash2, RotateCcw, GripVertical, PartyPopper, Pencil, X, List, LayoutGrid } from "lucide-react";
 import { IconPicker } from "./IconPicker";
 import { getIcon } from "@/lib/icons";
 
@@ -38,6 +38,8 @@ export function RoutineDetailView({ id }: { id: string }) {
   const [stepLabel, setStepLabel] = useState("");
   const [stepIcon, setStepIcon] = useState("check");
   const [dragStepId, setDragStepId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "icons">("list");
+  const wasAllDone = useRef(false);
 
   useEffect(() => {
     fetch(`/api/routines/${id}`)
@@ -45,7 +47,33 @@ export function RoutineDetailView({ id }: { id: string }) {
       .then(setRoutine)
       .finally(() => setLoading(false));
     if (searchParams.get("edit") === "1") setEditMode(true);
+
+    const savedView = localStorage.getItem("mindyou-activiteiten-weergave");
+    if (savedView === "icons" || savedView === "list") setViewMode(savedView);
   }, [id, searchParams]);
+
+  function changeViewMode(mode: "list" | "icons") {
+    setViewMode(mode);
+    localStorage.setItem("mindyou-activiteiten-weergave", mode);
+  }
+
+  const steps = routine?.steps ?? [];
+  const dateKey = routine?.resetDaily ? todayKey() : "ALL";
+  const isDone = (step: Step) => step.completions.some((c) => c.dateKey === dateKey);
+  const doneCount = steps.filter(isDone).length;
+  const total = steps.length;
+  const allDone = total > 0 && doneCount === total;
+
+  // Alle hooks staan bewust vóór de early returns hieronder — anders wisselt
+  // het aantal hooks per render en gooit React een fout.
+  useEffect(() => {
+    if (allDone && !wasAllDone.current) {
+      // Rustig naar boven scrollen zodat de melding altijd in beeld komt,
+      // ook als je onderin de lijst zat te scrollen.
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    wasAllDone.current = allDone;
+  }, [allDone]);
 
   if (loading) {
     return (
@@ -64,22 +92,6 @@ export function RoutineDetailView({ id }: { id: string }) {
       </div>
     );
   }
-
-  const dateKey = routine.resetDaily ? todayKey() : "ALL";
-  const isDone = (step: Step) => step.completions.some((c) => c.dateKey === dateKey);
-  const doneCount = routine.steps.filter(isDone).length;
-  const total = routine.steps.length;
-  const allDone = total > 0 && doneCount === total;
-
-  const wasAllDone = useRef(false);
-  useEffect(() => {
-    if (allDone && !wasAllDone.current) {
-      // Rustig naar boven scrollen zodat de melding altijd in beeld komt,
-      // ook als je onderin de lijst zat te scrollen.
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-    wasAllDone.current = allDone;
-  }, [allDone]);
 
   async function toggleStep(stepId: string) {
     if (!routine) return;
@@ -171,16 +183,44 @@ export function RoutineDetailView({ id }: { id: string }) {
             </p>
           )}
         </div>
-        {doneCount > 0 && (
-          <button
-            onClick={resetRoutine}
-            aria-label="Reset voortgang"
-            title="Reset voortgang"
-            className="shrink-0 rounded-full p-2 text-ink/30 transition-colors hover:bg-ink/5 hover:text-ink/60 dark:text-cream/30 dark:hover:bg-cream/10"
-          >
-            <RotateCcw className="h-4 w-4" />
-          </button>
-        )}
+        <div className="flex shrink-0 items-center gap-1">
+          <div className="flex items-center rounded-full border border-ink/15 p-0.5 dark:border-cream/20">
+            <button
+              onClick={() => changeViewMode("list")}
+              aria-label="Lijstweergave"
+              title="Lijstweergave"
+              className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                viewMode === "list"
+                  ? "bg-gold text-ink"
+                  : "text-ink/40 hover:text-ink/70 dark:text-cream/40 dark:hover:text-cream/70"
+              }`}
+            >
+              <List className="h-4 w-4" strokeWidth={2} />
+            </button>
+            <button
+              onClick={() => changeViewMode("icons")}
+              aria-label="Iconenweergave"
+              title="Iconenweergave"
+              className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                viewMode === "icons"
+                  ? "bg-gold text-ink"
+                  : "text-ink/40 hover:text-ink/70 dark:text-cream/40 dark:hover:text-cream/70"
+              }`}
+            >
+              <LayoutGrid className="h-4 w-4" strokeWidth={2} />
+            </button>
+          </div>
+          {doneCount > 0 && (
+            <button
+              onClick={resetRoutine}
+              aria-label="Reset voortgang"
+              title="Reset voortgang"
+              className="shrink-0 rounded-full p-2 text-ink/30 transition-colors hover:bg-ink/5 hover:text-ink/60 dark:text-cream/30 dark:hover:bg-cream/10"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {allDone && (
@@ -206,6 +246,71 @@ export function RoutineDetailView({ id }: { id: string }) {
         <p className="text-center font-sans text-sm text-ink/45 dark:text-cream/45">
           Nog geen stappen. Zet "Bewerken" aan om er een toe te voegen.
         </p>
+      ) : viewMode === "icons" ? (
+        <div className="-mx-5 px-3 sm:mx-0 sm:px-0">
+          <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-5 sm:gap-3">
+            {routine.steps
+              .slice()
+              .sort((a, b) =>
+                editMode
+                  ? a.order - b.order
+                  : Number(isDone(a)) - Number(isDone(b)) || a.order - b.order
+              )
+              .map((step) => {
+                const Icon = getIcon(step.icon);
+                const done = isDone(step);
+                return (
+                  <div
+                    key={step.id}
+                    draggable={editMode}
+                    onDragStart={() => editMode && setDragStepId(step.id)}
+                    onDragOver={(e) => editMode && e.preventDefault()}
+                    onDrop={() => editMode && handleDrop(step.id)}
+                    className="relative"
+                  >
+                    <button
+                      onClick={() => toggleStep(step.id)}
+                      aria-label={step.label}
+                      aria-pressed={done}
+                      title={step.label}
+                      className={`flex aspect-square w-full flex-col items-center justify-center rounded-2xl border-2 transition-colors ${
+                        done
+                          ? "border-gold bg-gold/15"
+                          : "border-ink/10 bg-ink/[0.02] dark:border-cream/12 dark:bg-cream/[0.03]"
+                      }`}
+                    >
+                      <Icon
+                        className={`h-7 w-7 sm:h-8 sm:w-8 ${done ? "text-gold" : "text-ink/60 dark:text-cream/60"}`}
+                        strokeWidth={1.5}
+                      />
+                      <span className="sr-only">{step.label}</span>
+                    </button>
+
+                    {done && (
+                      <span className="pointer-events-none absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gold text-ink">
+                        <Check className="h-3 w-3" strokeWidth={3} />
+                      </span>
+                    )}
+
+                    {editMode && (
+                      <div className="absolute inset-x-0 -bottom-1 flex items-center justify-center gap-1">
+                        <span className="flex h-5 w-5 cursor-grab items-center justify-center rounded-full bg-cream text-ink/40 shadow dark:bg-ink dark:text-cream/40">
+                          <GripVertical className="h-3 w-3" />
+                        </span>
+                        <button
+                          onClick={() => deleteStep(step.id)}
+                          aria-label="Stap verwijderen"
+                          className="flex h-5 w-5 items-center justify-center rounded-full bg-cream text-ink/40 shadow dark:bg-ink dark:text-cream/40"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        </div>
       ) : (
         <ul className="flex flex-1 flex-col gap-3">
           {routine.steps

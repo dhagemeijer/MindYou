@@ -1,4 +1,4 @@
-export const CURRENT_VERSION = "0.4.0";
+export const CURRENT_VERSION = "0.5.0";
 
 export type ChangelogKind = "major" | "minor" | "patch";
 
@@ -12,6 +12,24 @@ export interface ChangelogEntry {
 // Newest first. Bump CURRENT_VERSION and add an entry here on each release —
 // not on every code change, only when a new zip actually goes out.
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "0.5.0",
+    date: "2026-08-11",
+    kind: "minor",
+    summary: [
+      "Activiteiten-uitvoerscherm heeft nu een tweede weergave: schakel tussen de tekst-lijst en een pure iconenweergave (grid, bijna schermvullend op mobiel)",
+      "Je gekozen weergave wordt onthouden",
+    ],
+  },
+  {
+    version: "0.4.1",
+    date: "2026-08-11",
+    kind: "patch",
+    summary: [
+      "Bugfix: activiteiten openen/bewerken gaf een crash door een verkeerd geplaatste React-hook — verholpen",
+      "Drop it!-items hebben nu ook een bewerk-knop (potloodje), net als de andere onderdelen",
+    ],
+  },
   {
     version: "0.4.0",
     date: "2026-08-11",
