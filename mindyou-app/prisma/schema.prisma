@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ItemType {
+  IDEE
+  TODO
+  ACTIE
+}
+
+enum ItemStatus {
+  INBOX
+  ACTIEF
+  AFGEROND
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  name      String
+  color     String? // hex accent, optional
+  createdAt DateTime @default(now())
+  items     Item[]
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  name  String @unique
+  items Item[]
+}
+
+model Item {
+  id        String     @id @default(cuid())
+  type      ItemType
+  title     String
+  body      String?
+  status    ItemStatus @default(INBOX)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectId String?
+
+  tags Tag[]
+}
+
+// --- Activiteiten-schema (routines) ---
+
+model Routine {
+  id         String        @id @default(cuid())
+  name       String
+  resetDaily Boolean       @default(true) // dagelijks opnieuw afvinken, of eenmalig blijvend
+  order      Int           @default(0)
+  createdAt  DateTime      @default(now())
+  steps      RoutineStep[]
+}
+
+model RoutineStep {
+  id        String   @id @default(cuid())
+  label     String
+  icon      String // key uit de vaste iconenset, zie lib/icons.ts
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  routine   Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  routineId String
+
+  completions RoutineCompletion[]
+  reminders   Reminder[]
+}
+
+model RoutineCompletion {
+  id     String @id @default(cuid())
+  // "YYYY-MM-DD" voor een dagelijks resettende stap, of de vaste waarde "ALL"
+  // voor een eenmalige stap die permanent afgevinkt blijft.
+  dateKey String
+
+  step   RoutineStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  stepId String
+
+  @@unique([stepId, dateKey])
+}
+
+// --- Reminders ---
+
+enum ReminderRepeat {
+  EENMALIG
+  DAGELIJKS
+  WEKELIJKS
+}
+
+model Reminder {
+  id       String         @id @default(cuid())
+  title    String
+  time     String // "HH:MM", 24-uurs
+  repeat   ReminderRepeat @default(DAGELIJKS)
+  weekdays Int[] // 0=zo .. 6=za, alleen gebruikt bij WEKELIJKS
+  active   Boolean        @default(true)
+  createdAt DateTime      @default(now())
+
+  // optioneel gekoppeld aan een activiteiten-stap
+  step   RoutineStep? @relation(fields: [stepId], references: [id], onDelete: SetNull)
+  stepId String?
+}
+
+// --- Instelbaar hoofdscherm ---
+
+model ModuleSetting {
+  id      String  @id @default(cuid())
+  key     String  @unique // bv. "inbox", "projecten", "brainstorm", "activiteiten"
+  visible Boolean @default(true)
+  order   Int     @default(0)
+}

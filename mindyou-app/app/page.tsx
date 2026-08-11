@@ -1,59 +1,84 @@
-import { Inbox, Network, Target, CheckCircle2 } from "lucide-react";
+"use client";
 
-const pillars = [
-  {
-    icon: Inbox,
-    title: "Capture anything",
-    body: "Ideeën, taken, notities en meer.",
-  },
-  {
-    icon: Network,
-    title: "Connect everything",
-    body: "Verbind gedachten, projecten en taken.",
-  },
-  {
-    icon: Target,
-    title: "Focus on what matters",
-    body: "Duidelijkheid in wat belangrijk is.",
-  },
-  {
-    icon: CheckCircle2,
-    title: "Turn thoughts into action",
-    body: "Van inspiratie naar resultaat.",
-  },
-];
+import { useEffect, useState } from "react";
+import { Settings } from "lucide-react";
+import { MODULES, getModuleDef } from "@/lib/modules";
+
+interface Setting {
+  key: string;
+  visible: boolean;
+  order: number;
+}
 
 export default function Home() {
-  return (
-    <div className="mx-auto max-w-6xl px-6">
-      <section className="flex flex-col items-center gap-6 py-24 text-center sm:py-32">
-        <p className="font-sans text-sm uppercase tracking-[0.2em] text-gold">
-          Connect your thoughts.
-        </p>
-        <h1 className="max-w-3xl font-display text-4xl font-medium leading-tight sm:text-6xl">
-          Alles wat in je hoofd zit,
-          <br /> eindelijk op één plek.
-        </h1>
-        <p className="max-w-xl font-sans text-base text-ink/60 dark:text-cream/60 sm:text-lg">
-          MindYou verbindt je ideeën, taken en actielijsten — van vrije
-          brainstorm tot afgeronde actie.
-        </p>
-        <button className="mt-2 rounded-full bg-ink px-7 py-3 font-sans text-sm font-medium text-cream transition-opacity hover:opacity-90 dark:bg-gold dark:text-ink">
-          Begin met MindYou
-        </button>
-      </section>
+  const [settings, setSettings] = useState<Setting[]>([]);
+  const [loading, setLoading] = useState(true);
 
-      <section className="grid grid-cols-1 gap-8 border-t border-ink/5 py-16 dark:border-cream/10 sm:grid-cols-2 lg:grid-cols-4">
-        {pillars.map(({ icon: Icon, title, body }) => (
-          <div key={title} className="flex flex-col items-start gap-3">
-            <Icon className="h-5 w-5 text-gold" strokeWidth={1.5} />
-            <h3 className="font-sans text-sm font-semibold">{title}</h3>
-            <p className="font-sans text-sm text-ink/55 dark:text-cream/55">
-              {body}
-            </p>
-          </div>
-        ))}
-      </section>
+  useEffect(() => {
+    fetch("/api/module-settings")
+      .then((r) => r.json())
+      .then((data: Setting[]) => setSettings(data.sort((a, b) => a.order - b.order)))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const visible = settings.filter((s) => s.visible);
+
+  return (
+    <div className="mx-auto max-w-3xl px-6 py-16">
+      <div className="mb-10 flex items-end justify-between">
+        <div>
+          <p className="font-sans text-sm uppercase tracking-[0.2em] text-gold">
+            Connect your thoughts.
+          </p>
+          <h1 className="mt-2 font-display text-3xl font-medium text-ink dark:text-cream sm:text-4xl">
+            Waar wil je aan werken?
+          </h1>
+        </div>
+        <a
+          href="/instellingen"
+          aria-label="Instellingen"
+          className="rounded-full p-2 text-ink/40 transition-colors hover:bg-ink/5 hover:text-ink dark:text-cream/40 dark:hover:bg-cream/10 dark:hover:text-cream"
+        >
+          <Settings className="h-5 w-5" strokeWidth={1.75} />
+        </a>
+      </div>
+
+      {loading ? (
+        <p className="font-sans text-sm text-ink/40 dark:text-cream/40">Laden...</p>
+      ) : visible.length === 0 ? (
+        <p className="font-sans text-sm text-ink/40 dark:text-cream/40">
+          Alle onderdelen staan uit. Zet ze weer aan bij{" "}
+          <a href="/instellingen" className="underline hover:text-gold">
+            Instellingen
+          </a>
+          .
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {visible.map(({ key }) => {
+            const def = getModuleDef(key);
+            if (!def) return null;
+            const Icon = def.icon;
+            return (
+              <a
+                key={key}
+                href={def.href}
+                className="group flex flex-col gap-3 rounded-2xl border border-ink/8 p-6 transition-colors hover:border-gold dark:border-cream/10"
+              >
+                <Icon className="h-6 w-6 text-gold" strokeWidth={1.5} />
+                <div>
+                  <h2 className="font-display text-lg font-medium text-ink dark:text-cream">
+                    {def.label}
+                  </h2>
+                  <p className="mt-1 font-sans text-sm text-ink/55 dark:text-cream/55">
+                    {def.description}
+                  </p>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

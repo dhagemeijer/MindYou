@@ -14,26 +14,28 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink/5 bg-cream/80 backdrop-blur-md dark:border-cream/10 dark:bg-ink/80">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-2">
         <a href="/" className="flex items-center" aria-label="MindYou — home">
           {mounted ? (
             <Image
-              src={isDark ? "/logo/wordmark-dark.png" : "/logo/wordmark-light.png"}
+              src={isDark ? "/logo/wordmark-dark-transparent.png" : "/logo/wordmark-light-transparent.png"}
               alt="MindYou. Connect your thoughts."
-              width={172}
-              height={91}
+              width={1265}
+              height={361}
               priority
-              className="h-9 w-auto"
+              className="h-16 w-auto sm:h-20"
             />
           ) : (
-            <span className="h-9 w-[172px]" aria-hidden />
+            <span className="h-16 w-[251px] sm:h-20 sm:w-[314px]" aria-hidden />
           )}
         </a>
 
-        <nav className="hidden items-center gap-8 font-sans text-sm text-ink/70 dark:text-cream/70 sm:flex">
-          <a href="#" className="transition-colors hover:text-gold">Inbox</a>
-          <a href="#" className="transition-colors hover:text-gold">Projecten</a>
-          <a href="#" className="transition-colors hover:text-gold">Brainstorm</a>
+        <nav className="hidden items-center gap-7 font-sans text-sm text-ink/70 dark:text-cream/70 sm:flex">
+          <a href="/inbox" className="transition-colors hover:text-gold">Inbox</a>
+          <a href="/projecten" className="transition-colors hover:text-gold">Projecten</a>
+          <a href="/brainstorm" className="transition-colors hover:text-gold">Brainstorm</a>
+          <a href="/activiteiten" className="transition-colors hover:text-gold">Activiteiten</a>
+          <a href="/reminders" className="transition-colors hover:text-gold">Reminders</a>
         </nav>
 
         <ThemeToggle />
