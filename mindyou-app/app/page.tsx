@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Settings } from "lucide-react";
-import { MODULES, getModuleDef } from "@/lib/modules";
+import { getModuleDef } from "@/lib/modules";
 
 interface Setting {
   key: string;
@@ -25,22 +24,13 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
-      <div className="mb-10 flex items-end justify-between">
-        <div>
-          <p className="font-sans text-sm uppercase tracking-[0.2em] text-gold">
-            Connect your thoughts.
-          </p>
-          <h1 className="mt-2 font-display text-3xl font-medium text-ink dark:text-cream sm:text-4xl">
-            Waar wil je aan werken?
-          </h1>
-        </div>
-        <a
-          href="/instellingen"
-          aria-label="Instellingen"
-          className="rounded-full p-2 text-ink/40 transition-colors hover:bg-ink/5 hover:text-ink dark:text-cream/40 dark:hover:bg-cream/10 dark:hover:text-cream"
-        >
-          <Settings className="h-5 w-5" strokeWidth={1.75} />
-        </a>
+      <div className="mb-10">
+        <p className="font-sans text-sm uppercase tracking-[0.2em] text-gold">
+          Connect your thoughts.
+        </p>
+        <h1 className="mt-2 font-display text-3xl font-medium text-ink dark:text-cream sm:text-4xl">
+          Waar wil je aan werken?
+        </h1>
       </div>
 
       {loading ? (

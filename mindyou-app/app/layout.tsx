@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { MobileNav } from "@/components/MobileNav";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -54,8 +55,9 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="flex min-h-screen flex-col">
             <Header />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 pb-16 sm:pb-0">{children}</main>
             <Footer />
+            <MobileNav />
           </div>
         </ThemeProvider>
       </body>

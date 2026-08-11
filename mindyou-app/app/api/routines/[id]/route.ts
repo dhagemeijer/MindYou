@@ -1,6 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const routine = await prisma.routine.findUnique({
+    where: { id: params.id },
+    include: {
+      steps: {
+        orderBy: { order: "asc" },
+        include: { completions: true, reminders: true },
+      },
+    },
+  });
+
+  if (!routine) {
+    return NextResponse.json({ error: "Routine niet gevonden" }, { status: 404 });
+  }
+
+  return NextResponse.json(routine);
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }

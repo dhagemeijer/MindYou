@@ -115,3 +115,11 @@ model ModuleSetting {
   visible Boolean @default(true)
   order   Int     @default(0)
 }
+
+// Welke pictogrammen zichtbaar zijn in de icoonkiezer bij activiteiten.
+model IconSetting {
+  id      String  @id @default(cuid())
+  key     String  @unique // key uit lib/icons.ts
+  visible Boolean @default(true)
+  order   Int     @default(0)
+}

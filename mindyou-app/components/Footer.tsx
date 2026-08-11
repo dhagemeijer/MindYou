@@ -15,14 +15,14 @@ export function Footer() {
   const isDark = mounted && resolvedTheme === "dark";
 
   return (
-    <footer className="border-t border-ink/5 dark:border-cream/10">
+    <footer className="hidden border-t border-ink/5 dark:border-cream/10 sm:block">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 py-12 text-center">
         {mounted && (
           <Image
-            src={isDark ? "/logo/mark-dark-transparent.png" : "/logo/mark-light.png"}
+            src={isDark ? "/logo/mark-dark-square.png" : "/logo/mark-light.png"}
             alt="MindYou monogram"
-            width={44}
-            height={44}
+            width={512}
+            height={512}
             className="h-11 w-11 rounded-full"
           />
         )}

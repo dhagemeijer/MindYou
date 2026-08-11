@@ -17,3 +17,26 @@
     outline-offset: 2px;
   }
 }
+
+/* Rustige, eenmalige animatie voor de "alles afgevinkt"-melding.
+   Bewust traag en zonder herhaling/knipperen — geen prikkelende beweging. */
+@keyframes gentle-celebrate {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-gentle-celebrate {
+  animation: gentle-celebrate 700ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-gentle-celebrate {
+    animation: none;
+  }
+}
