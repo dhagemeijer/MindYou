@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Check, Plus, Trash2, GripVertical, PartyPopper, Pencil, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Check, Plus, Trash2, RotateCcw, GripVertical, PartyPopper, Pencil, X } from "lucide-react";
 import { IconPicker } from "./IconPicker";
 import { getIcon } from "@/lib/icons";
 
@@ -30,6 +31,7 @@ function todayKey() {
 }
 
 export function RoutineDetailView({ id }: { id: string }) {
+  const searchParams = useSearchParams();
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
@@ -42,7 +44,8 @@ export function RoutineDetailView({ id }: { id: string }) {
       .then((r) => r.json())
       .then(setRoutine)
       .finally(() => setLoading(false));
-  }, [id]);
+    if (searchParams.get("edit") === "1") setEditMode(true);
+  }, [id, searchParams]);
 
   if (loading) {
     return (
@@ -67,6 +70,16 @@ export function RoutineDetailView({ id }: { id: string }) {
   const doneCount = routine.steps.filter(isDone).length;
   const total = routine.steps.length;
   const allDone = total > 0 && doneCount === total;
+
+  const wasAllDone = useRef(false);
+  useEffect(() => {
+    if (allDone && !wasAllDone.current) {
+      // Rustig naar boven scrollen zodat de melding altijd in beeld komt,
+      // ook als je onderin de lijst zat te scrollen.
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    wasAllDone.current = allDone;
+  }, [allDone]);
 
   async function toggleStep(stepId: string) {
     if (!routine) return;
@@ -116,6 +129,14 @@ export function RoutineDetailView({ id }: { id: string }) {
     await fetch(`/api/routines/steps/${stepId}`, { method: "DELETE" });
   }
 
+  async function resetRoutine() {
+    if (!routine) return;
+    setRoutine((prev) =>
+      prev ? { ...prev, steps: prev.steps.map((s) => ({ ...s, completions: [] })) } : prev
+    );
+    await fetch(`/api/routines/${routine.id}/reset`, { method: "POST" });
+  }
+
   function handleDrop(targetId: string) {
     if (!routine || !dragStepId || dragStepId === targetId) {
       setDragStepId(null);
@@ -139,19 +160,31 @@ export function RoutineDetailView({ id }: { id: string }) {
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-lg flex-col px-5 py-8 sm:py-10">
-      <div className="mb-6 text-center">
-        <h1 className="font-display text-2xl font-medium text-ink dark:text-cream sm:text-3xl">
-          {routine.name}
-        </h1>
-        {total > 0 && (
-          <p className="mt-2 font-sans text-sm text-ink/50 dark:text-cream/50">
-            {doneCount} van {total} gedaan
-          </p>
+      <div className="mb-6 flex items-start justify-between gap-3">
+        <div className="flex-1 text-center">
+          <h1 className="font-display text-2xl font-medium text-ink dark:text-cream sm:text-3xl">
+            {routine.name}
+          </h1>
+          {total > 0 && (
+            <p className="mt-2 font-sans text-sm text-ink/50 dark:text-cream/50">
+              {doneCount} van {total} gedaan
+            </p>
+          )}
+        </div>
+        {doneCount > 0 && (
+          <button
+            onClick={resetRoutine}
+            aria-label="Reset voortgang"
+            title="Reset voortgang"
+            className="shrink-0 rounded-full p-2 text-ink/30 transition-colors hover:bg-ink/5 hover:text-ink/60 dark:text-cream/30 dark:hover:bg-cream/10"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </button>
         )}
       </div>
 
       {allDone && (
-        <div className="animate-gentle-celebrate mb-6 flex flex-col items-center gap-2 rounded-2xl border border-gold/40 bg-gold/10 px-6 py-6 text-center">
+        <div className="animate-gentle-celebrate mb-6 flex flex-col items-center gap-3 rounded-2xl border border-gold/40 bg-gold/10 px-6 py-6 text-center">
           <PartyPopper className="h-6 w-6 text-gold" strokeWidth={1.75} />
           <p className="font-display text-base font-medium text-ink dark:text-cream">
             Goed gedaan!
@@ -159,6 +192,13 @@ export function RoutineDetailView({ id }: { id: string }) {
           <p className="font-sans text-xs text-ink/55 dark:text-cream/55">
             Alles is afgerond.
           </p>
+          <button
+            onClick={resetRoutine}
+            className="flex items-center gap-1.5 rounded-full border border-gold/50 px-4 py-1.5 font-sans text-xs text-ink transition-colors hover:bg-gold/10 dark:text-cream"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Opnieuw beginnen
+          </button>
         </div>
       )}
 
@@ -170,7 +210,11 @@ export function RoutineDetailView({ id }: { id: string }) {
         <ul className="flex flex-1 flex-col gap-3">
           {routine.steps
             .slice()
-            .sort((a, b) => a.order - b.order)
+            .sort((a, b) =>
+              editMode
+                ? a.order - b.order
+                : Number(isDone(a)) - Number(isDone(b)) || a.order - b.order
+            )
             .map((step) => {
               const Icon = getIcon(step.icon);
               const done = isDone(step);

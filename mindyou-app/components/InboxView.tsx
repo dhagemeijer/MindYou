@@ -121,7 +121,7 @@ export function InboxView() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-12">
       <h1 className="mb-1 font-display text-3xl font-medium text-ink dark:text-cream">
-        Inbox
+        Drop it!
       </h1>
       <p className="mb-8 font-sans text-sm text-ink/55 dark:text-cream/55">
         Vang alles wat in je hoofd zit — sorteer later.

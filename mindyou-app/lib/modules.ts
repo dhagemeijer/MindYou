@@ -13,7 +13,7 @@ export interface ModuleDef {
 export const MODULES: ModuleDef[] = [
   {
     key: "inbox",
-    label: "Inbox",
+    label: "Drop it!",
     description: "Vang ideeën, todo's en acties op.",
     href: "/inbox",
     icon: Inbox,

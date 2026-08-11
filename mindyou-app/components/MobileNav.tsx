@@ -5,7 +5,7 @@ import { Home as HomeIcon, Inbox, ListChecks, Bell, Settings } from "lucide-reac
 
 const TABS = [
   { href: "/", label: "Home", icon: HomeIcon },
-  { href: "/inbox", label: "Inbox", icon: Inbox },
+  { href: "/inbox", label: "Drop it!", icon: Inbox },
   { href: "/activiteiten", label: "Activiteiten", icon: ListChecks },
   { href: "/reminders", label: "Reminders", icon: Bell },
   { href: "/instellingen", label: "Instellingen", icon: Settings },

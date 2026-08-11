@@ -46,6 +46,8 @@ model Item {
   projectId String?
 
   tags Tag[]
+
+  promotedFromNode BrainstormNode?
 }
 
 // --- Activiteiten-schema (routines) ---
@@ -96,15 +98,57 @@ enum ReminderRepeat {
 model Reminder {
   id       String         @id @default(cuid())
   title    String
-  time     String // "HH:MM", 24-uurs
+  time     String // "HH:MM", 24-uurs, Europe/Amsterdam
   repeat   ReminderRepeat @default(DAGELIJKS)
   weekdays Int[] // 0=zo .. 6=za, alleen gebruikt bij WEKELIJKS
   active   Boolean        @default(true)
   createdAt DateTime      @default(now())
 
+  // Voorkomt dubbel afvuren als de cron-check meerdere keren binnen dezelfde
+  // minuut draait. Bevat een sleutel als "2026-08-11T08:00" (DAGELIJKS/WEKELIJKS)
+  // of gewoon "FIRED" (EENMALIG, die daarna ook meteen op active=false gaat).
+  lastFiredKey String?
+
   // optioneel gekoppeld aan een activiteiten-stap
   step   RoutineStep? @relation(fields: [stepId], references: [id], onDelete: SetNull)
   stepId String?
+}
+
+// Web Push-abonnementen (browser/toestel), voor achtergrond-meldingen ook als
+// de app gesloten is.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+}
+
+// --- Brainstorm (radiale mindmap) ---
+
+model BrainstormSession {
+  id        String           @id @default(cuid())
+  title     String // centrale onderwerp, staat in het middelpunt
+  createdAt DateTime         @default(now())
+  nodes     BrainstormNode[]
+}
+
+model BrainstormNode {
+  id        String   @id @default(cuid())
+  label     String
+  createdAt DateTime @default(now())
+
+  session   BrainstormSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+
+  // null = tak rechtstreeks vanaf het centrale onderwerp
+  parent   BrainstormNode?  @relation("NodeChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId String?
+  children BrainstormNode[] @relation("NodeChildren")
+
+  // gezet zodra dit knooppunt is omgezet naar een Inbox-item
+  promotedItem   Item?   @relation(fields: [promotedItemId], references: [id], onDelete: SetNull)
+  promotedItemId String? @unique
 }
 
 // --- Instelbaar hoofdscherm ---

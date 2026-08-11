@@ -1,4 +1,4 @@
-export const CURRENT_VERSION = "0.3.0";
+export const CURRENT_VERSION = "0.4.0";
 
 export type ChangelogKind = "major" | "minor" | "patch";
 
@@ -12,6 +12,19 @@ export interface ChangelogEntry {
 // Newest first. Bump CURRENT_VERSION and add an entry here on each release —
 // not on every code change, only when a new zip actually goes out.
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "0.4.0",
+    date: "2026-08-11",
+    kind: "minor",
+    summary: [
+      "Drop it! — Inbox heeft een nieuwe naam, overal in de app",
+      "Brainstorm is nu een echte radiale mindmap: centraal onderwerp met takken, knooppunten promoveren naar Drop it!",
+      "Activiteiten: afgevinkte stappen zakken naar onderen, en het scherm scrollt vanzelf naar boven zodra alles klaar is",
+      "Activiteiten resetten: 3 knoppen per routine (reset, bewerken, verwijderen), plus 'Opnieuw beginnen' in de felicitatie-melding",
+      "Reminders: echte achtergrond-pushmeldingen (ook als de app dicht is), plus een bewerk-knop per reminder",
+      "iOS-opstartscherm gebruikt nu het originele lichte monogram, geen zelfgemaakte compositie meer",
+    ],
+  },
   {
     version: "0.3.0",
     date: "2026-08-11",

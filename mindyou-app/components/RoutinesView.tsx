@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Repeat, CalendarCheck2, ListChecks } from "lucide-react";
+import { Plus, Trash2, Pencil, RotateCcw, Repeat, CalendarCheck2, ListChecks } from "lucide-react";
 import { getIcon } from "@/lib/icons";
 import { NewRoutineModal } from "./NewRoutineModal";
 
@@ -57,6 +57,15 @@ export function RoutinesView() {
     setRoutines((prev) => [...prev, { ...routine, steps: [] }]);
     setShowNew(false);
     window.location.href = `/activiteiten/${routine.id}`;
+  }
+
+  async function resetRoutine(id: string, e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setRoutines((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, steps: r.steps.map((s) => ({ ...s, completions: [] })) } : r))
+    );
+    await fetch(`/api/routines/${id}/reset`, { method: "POST" });
   }
 
   async function deleteRoutine(id: string, e: React.MouseEvent) {
@@ -146,13 +155,34 @@ export function RoutinesView() {
                     </p>
                   </div>
 
-                  <button
-                    onClick={(e) => deleteRoutine(routine.id, e)}
-                    aria-label="Routine verwijderen"
-                    className="shrink-0 rounded-full p-2 text-ink/25 transition-colors hover:bg-ink/5 hover:text-ink/50 dark:text-cream/25 dark:hover:bg-cream/10"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="flex shrink-0 items-center gap-0.5">
+                    <button
+                      onClick={(e) => resetRoutine(routine.id, e)}
+                      disabled={doneCount === 0}
+                      aria-label="Reset voortgang"
+                      title="Reset voortgang"
+                      className="rounded-full p-2 text-ink/25 transition-colors hover:bg-ink/5 hover:text-ink/50 disabled:pointer-events-none disabled:opacity-25 dark:text-cream/25 dark:hover:bg-cream/10"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </button>
+                    <a
+                      href={`/activiteiten/${routine.id}?edit=1`}
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label="Bewerken"
+                      title="Bewerken"
+                      className="rounded-full p-2 text-ink/25 transition-colors hover:bg-ink/5 hover:text-ink/50 dark:text-cream/25 dark:hover:bg-cream/10"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </a>
+                    <button
+                      onClick={(e) => deleteRoutine(routine.id, e)}
+                      aria-label="Routine verwijderen"
+                      title="Verwijderen"
+                      className="rounded-full p-2 text-ink/25 transition-colors hover:bg-ink/5 hover:text-ink/50 dark:text-cream/25 dark:hover:bg-cream/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </a>
               </li>
             );

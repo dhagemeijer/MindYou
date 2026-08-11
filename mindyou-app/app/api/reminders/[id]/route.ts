@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { ReminderRepeat } from "@prisma/client";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const body = await req.json();
-  const { active, time, title } = body as {
+  const { active, time, title, repeat, weekdays } = body as {
     active?: boolean;
     time?: string;
     title?: string;
+    repeat?: ReminderRepeat;
+    weekdays?: number[];
   };
 
   const reminder = await prisma.reminder.update({
@@ -18,6 +21,8 @@ export async function PATCH(
       ...(active !== undefined ? { active } : {}),
       ...(time !== undefined ? { time } : {}),
       ...(title !== undefined ? { title } : {}),
+      ...(repeat !== undefined ? { repeat } : {}),
+      ...(weekdays !== undefined ? { weekdays } : {}),
     },
   });
 

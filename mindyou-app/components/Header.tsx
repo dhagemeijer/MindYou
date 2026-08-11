@@ -46,7 +46,7 @@ export function Header() {
         </a>
 
         <nav className="hidden flex-1 items-center justify-center gap-7 font-sans text-sm text-ink/70 dark:text-cream/70 sm:flex">
-          <a href="/inbox" className="transition-colors hover:text-gold">Inbox</a>
+          <a href="/inbox" className="transition-colors hover:text-gold">Drop it!</a>
           <a href="/projecten" className="transition-colors hover:text-gold">Projecten</a>
           <a href="/brainstorm" className="transition-colors hover:text-gold">Brainstorm</a>
           <a href="/activiteiten" className="transition-colors hover:text-gold">Activiteiten</a>
