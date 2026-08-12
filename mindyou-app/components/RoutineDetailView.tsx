@@ -247,69 +247,67 @@ export function RoutineDetailView({ id }: { id: string }) {
           Nog geen stappen. Zet "Bewerken" aan om er een toe te voegen.
         </p>
       ) : viewMode === "icons" ? (
-        <div className="-mx-5 px-3 sm:mx-0 sm:px-0">
-          <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-5 sm:gap-3">
-            {routine.steps
-              .slice()
-              .sort((a, b) =>
-                editMode
-                  ? a.order - b.order
-                  : Number(isDone(a)) - Number(isDone(b)) || a.order - b.order
-              )
-              .map((step) => {
-                const Icon = getIcon(step.icon);
-                const done = isDone(step);
-                return (
-                  <div
-                    key={step.id}
-                    draggable={editMode}
-                    onDragStart={() => editMode && setDragStepId(step.id)}
-                    onDragOver={(e) => editMode && e.preventDefault()}
-                    onDrop={() => editMode && handleDrop(step.id)}
-                    className="relative"
+        <div className="flex flex-col items-center gap-3">
+          {routine.steps
+            .slice()
+            .sort((a, b) =>
+              editMode
+                ? a.order - b.order
+                : Number(isDone(a)) - Number(isDone(b)) || a.order - b.order
+            )
+            .map((step) => {
+              const Icon = getIcon(step.icon);
+              const done = isDone(step);
+              return (
+                <div
+                  key={step.id}
+                  draggable={editMode}
+                  onDragStart={() => editMode && setDragStepId(step.id)}
+                  onDragOver={(e) => editMode && e.preventDefault()}
+                  onDrop={() => editMode && handleDrop(step.id)}
+                  className="relative w-4/5 max-w-xs"
+                >
+                  <button
+                    onClick={() => toggleStep(step.id)}
+                    aria-label={step.label}
+                    aria-pressed={done}
+                    title={step.label}
+                    className={`flex aspect-square w-full flex-col items-center justify-center rounded-3xl border-2 transition-colors ${
+                      done
+                        ? "border-gold bg-gold/15"
+                        : "border-ink/10 bg-ink/[0.02] dark:border-cream/12 dark:bg-cream/[0.03]"
+                    }`}
                   >
-                    <button
-                      onClick={() => toggleStep(step.id)}
-                      aria-label={step.label}
-                      aria-pressed={done}
-                      title={step.label}
-                      className={`flex aspect-square w-full flex-col items-center justify-center rounded-2xl border-2 transition-colors ${
-                        done
-                          ? "border-gold bg-gold/15"
-                          : "border-ink/10 bg-ink/[0.02] dark:border-cream/12 dark:bg-cream/[0.03]"
-                      }`}
-                    >
-                      <Icon
-                        className={`h-7 w-7 sm:h-8 sm:w-8 ${done ? "text-gold" : "text-ink/60 dark:text-cream/60"}`}
-                        strokeWidth={1.5}
-                      />
-                      <span className="sr-only">{step.label}</span>
-                    </button>
+                    <Icon
+                      className={`h-16 w-16 sm:h-20 sm:w-20 ${done ? "text-gold" : "text-ink/60 dark:text-cream/60"}`}
+                      strokeWidth={1.25}
+                    />
+                    <span className="sr-only">{step.label}</span>
+                  </button>
 
-                    {done && (
-                      <span className="pointer-events-none absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gold text-ink">
-                        <Check className="h-3 w-3" strokeWidth={3} />
+                  {done && (
+                    <span className="pointer-events-none absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-gold text-ink">
+                      <Check className="h-4 w-4" strokeWidth={3} />
+                    </span>
+                  )}
+
+                  {editMode && (
+                    <div className="absolute inset-x-0 -bottom-2 flex items-center justify-center gap-2">
+                      <span className="flex h-7 w-7 cursor-grab items-center justify-center rounded-full bg-cream text-ink/40 shadow dark:bg-ink dark:text-cream/40">
+                        <GripVertical className="h-4 w-4" />
                       </span>
-                    )}
-
-                    {editMode && (
-                      <div className="absolute inset-x-0 -bottom-1 flex items-center justify-center gap-1">
-                        <span className="flex h-5 w-5 cursor-grab items-center justify-center rounded-full bg-cream text-ink/40 shadow dark:bg-ink dark:text-cream/40">
-                          <GripVertical className="h-3 w-3" />
-                        </span>
-                        <button
-                          onClick={() => deleteStep(step.id)}
-                          aria-label="Stap verwijderen"
-                          className="flex h-5 w-5 items-center justify-center rounded-full bg-cream text-ink/40 shadow dark:bg-ink dark:text-cream/40"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-          </div>
+                      <button
+                        onClick={() => deleteStep(step.id)}
+                        aria-label="Stap verwijderen"
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-cream text-ink/40 shadow dark:bg-ink dark:text-cream/40"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
         </div>
       ) : (
         <ul className="flex flex-1 flex-col gap-3">

@@ -1,4 +1,4 @@
-export const CURRENT_VERSION = "0.5.0";
+export const CURRENT_VERSION = "0.5.1";
 
 export type ChangelogKind = "major" | "minor" | "patch";
 
@@ -13,11 +13,19 @@ export interface ChangelogEntry {
 // not on every code change, only when a new zip actually goes out.
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.5.1",
+    date: "2026-08-11",
+    kind: "patch",
+    summary: [
+      "Iconenweergave in het uitvoerscherm: pictogrammen staan nu onder elkaar (1 kolom), groter en gecentreerd (~80% breed) in plaats van een rooster",
+    ],
+  },
+  {
     version: "0.5.0",
     date: "2026-08-11",
     kind: "minor",
     summary: [
-      "Activiteiten-uitvoerscherm heeft nu een tweede weergave: schakel tussen de tekst-lijst en een pure iconenweergave (grid, bijna schermvullend op mobiel)",
+      "Activiteiten-uitvoerscherm heeft nu een tweede weergave: schakel tussen de tekst-lijst en een pure iconenweergave",
       "Je gekozen weergave wordt onthouden",
     ],
   },

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Pencil, RotateCcw, Repeat, CalendarCheck2, ListChecks } from "lucide-react";
-import { getIcon } from "@/lib/icons";
 import { NewRoutineModal } from "./NewRoutineModal";
 
 interface Completion {
@@ -116,25 +115,6 @@ export function RoutinesView() {
                   href={`/activiteiten/${routine.id}`}
                   className="flex items-center gap-4 rounded-2xl border border-ink/8 p-4 transition-colors hover:border-gold dark:border-cream/10"
                 >
-                  <div className="flex -space-x-2">
-                    {routine.steps.slice(0, 4).map((s) => {
-                      const Icon = getIcon(s.icon);
-                      return (
-                        <span
-                          key={s.id}
-                          className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-cream bg-ink/5 dark:border-ink dark:bg-cream/10"
-                        >
-                          <Icon className="h-4 w-4 text-gold" strokeWidth={1.75} />
-                        </span>
-                      );
-                    })}
-                    {total === 0 && (
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-cream bg-ink/5 dark:border-ink dark:bg-cream/10">
-                        <ListChecks className="h-4 w-4 text-ink/30 dark:text-cream/30" strokeWidth={1.75} />
-                      </span>
-                    )}
-                  </div>
-
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-display text-base font-medium text-ink dark:text-cream">
                       {routine.name}
